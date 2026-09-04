@@ -14,7 +14,7 @@ import {
 } from '../services/api';
 
 interface AdminDashboardProps {
-  onBackToHome: () => void;
+  onBackToHome?: () => void;
 }
 
 type AdminTab = 'overview' | 'buses' | 'users';
@@ -36,7 +36,7 @@ const CITIES = [
   'Hambantota',
 ];
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const { user, token } = useAuth();
 
   // Active Sidebar Tab
@@ -408,17 +408,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) 
             <span className="admin-sidebar-badge">{users.length}</span>
           </button>
         </nav>
-
-        <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
-          <button
-            type="button"
-            className="nav-link-btn"
-            style={{ width: '100%', textAlign: 'center', border: '1px solid #e2e8f0', borderRadius: '10px' }}
-            onClick={onBackToHome}
-          >
-            ← Passenger View
-          </button>
-        </div>
       </aside>
 
       {/* Main Content Area */}
@@ -491,33 +480,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) 
 
                   <div className="admin-stat-tile">
                     <div className="stat-tile-top">
-                      <span>Total Bookings</span>
-                      <span>📋</span>
-                    </div>
-                    <span className="stat-tile-value">{stats.totalBookings}</span>
-                    <span className="stat-tile-sub">All reservations</span>
-                  </div>
-
-                  <div className="admin-stat-tile">
-                    <div className="stat-tile-top">
-                      <span>Confirmed Trips</span>
-                      <span>✅</span>
+                      <span>In-Service Buses</span>
+                      <span>🟢</span>
                     </div>
                     <span className="stat-tile-value" style={{ color: '#059669' }}>
-                      {stats.confirmedBookings}
+                      {totalActiveFleet}
                     </span>
-                    <span className="stat-tile-sub">Active seat locks</span>
+                    <span className="stat-tile-sub">Active in service</span>
                   </div>
 
                   <div className="admin-stat-tile">
                     <div className="stat-tile-top">
-                      <span>Cancelled Trips</span>
-                      <span>❌</span>
+                      <span>AC Fleet</span>
+                      <span>❄️</span>
                     </div>
-                    <span className="stat-tile-value" style={{ color: '#dc2626' }}>
-                      {stats.cancelledBookings}
+                    <span className="stat-tile-value" style={{ color: '#0284c7' }}>
+                      {totalAcBuses}
                     </span>
-                    <span className="stat-tile-sub">Released seats</span>
+                    <span className="stat-tile-sub">Luxury express</span>
+                  </div>
+
+                  <div className="admin-stat-tile">
+                    <div className="stat-tile-top">
+                      <span>Non-AC Fleet</span>
+                      <span>🚌</span>
+                    </div>
+                    <span className="stat-tile-value" style={{ color: '#475569' }}>
+                      {totalNonAcBuses}
+                    </span>
+                    <span className="stat-tile-sub">Standard routes</span>
                   </div>
 
                   <div className="admin-stat-tile">
@@ -1066,7 +1057,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) 
                     style={{ width: '16px', height: '16px', accentColor: '#059669', cursor: 'pointer' }}
                   />
                   <label htmlFor="newIsActive" style={{ fontSize: '13.5px', color: '#334155', cursor: 'pointer' }}>
-                    Active and available for booking immediately
+                    Active and in service in transit network
                   </label>
                 </div>
 
@@ -1257,7 +1248,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) 
                     style={{ width: '16px', height: '16px', accentColor: '#059669', cursor: 'pointer' }}
                   />
                   <label htmlFor="editIsActive" style={{ fontSize: '13.5px', color: '#334155', cursor: 'pointer' }}>
-                    Active in Service (Commuters can find and book seats)
+                    Active in Service (Operating on scheduled route)
                   </label>
                 </div>
 

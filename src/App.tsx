@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { AuthProvider } from './context/AuthContext';
+import { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { LoginPage } from './components/LoginPage';
 import { RegisterPage } from './components/RegisterPage';
@@ -12,14 +12,24 @@ import './App.css';
 type ViewMode = 'home' | 'login' | 'register' | 'admin' | 'user-dashboard';
 
 function AppContent() {
+  const { user, isAuthenticated } = useAuth();
   const [activeView, setActiveView] = useState<ViewMode>('home');
+
+  // Admin users only access the Admin Dashboard after login
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'admin') {
+      if (activeView !== 'admin') {
+        setActiveView('admin');
+      }
+    }
+  }, [isAuthenticated, user?.role, activeView]);
 
   return (
     <div className="app-wrapper">
       <Navbar activeView={activeView} setActiveView={setActiveView} />
 
       <main style={{ flex: 1 }}>
-        {activeView === 'home' && (
+        {activeView === 'home' && (!isAuthenticated || user?.role !== 'admin') && (
           <HeroSearch
             onNavigateToDashboard={() => setActiveView('user-dashboard')}
             onNavigateToLogin={() => setActiveView('login')}
@@ -47,7 +57,7 @@ function AppContent() {
         )}
 
         {activeView === 'admin' && (
-          <AdminDashboard onBackToHome={() => setActiveView('home')} />
+          <AdminDashboard />
         )}
 
         {activeView === 'user-dashboard' && (
@@ -67,3 +77,4 @@ export default function App() {
     </AuthProvider>
   );
 }
+
