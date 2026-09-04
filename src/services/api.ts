@@ -44,15 +44,20 @@ export interface Bus {
 export interface Booking {
   _id?: string;
   id?: string;
-  bookingId: string;
-  userId?: string;
-  busId?: Bus;
+  bookingId?: string;
+  userId?: string | User;
+  busId?: string | Bus;
   travelDate: string;
   seats: number[];
-  passengerCount: number;
-  farePerSeat: number;
+  passengerCount?: number;
+  farePerSeat?: number;
   totalFare: number;
   status: 'CONFIRMED' | 'CANCELLED';
+  passengerDetails?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
   createdAt?: string;
 }
 
@@ -142,8 +147,9 @@ export async function deleteUserApi(id: string, token: string): Promise<{ succes
   return data;
 }
 
-export async function getBusesApi(): Promise<{ success: boolean; data: Bus[] }> {
-  const res = await fetch(`${API_BASE}/buses`);
+export async function getBusesApi(all: boolean = false): Promise<{ success: boolean; data: Bus[] }> {
+  const url = all ? `${API_BASE}/buses?all=true` : `${API_BASE}/buses`;
+  const res = await fetch(url);
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.message || 'Failed to fetch buses.');
@@ -181,6 +187,26 @@ export async function createBusApi(busData: Partial<Bus>, token: string): Promis
   return data;
 }
 
+export async function updateBusApi(
+  id: string,
+  busData: Partial<Bus>,
+  token: string
+): Promise<{ success: boolean; message: string; data: Bus }> {
+  const res = await fetch(`${API_BASE}/buses/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(busData),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to update bus.');
+  }
+  return data;
+}
+
 export async function getMyBookingsApi(token: string): Promise<{ success: boolean; data: Booking[] }> {
   const res = await fetch(`${API_BASE}/bookings/my`, {
     headers: {
@@ -195,10 +221,10 @@ export async function getMyBookingsApi(token: string): Promise<{ success: boolea
 }
 
 export async function cancelBookingApi(
-  id: string,
+  bookingId: string,
   token: string
 ): Promise<{ success: boolean; message: string; data: Booking }> {
-  const res = await fetch(`${API_BASE}/bookings/${id}/cancel`, {
+  const res = await fetch(`${API_BASE}/bookings/${bookingId}/cancel`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
