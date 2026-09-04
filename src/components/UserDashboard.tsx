@@ -390,3 +390,4 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onBackToSearch }) 
     </div>
   );
 };
+
