@@ -15,13 +15,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateToReg
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Quick fill helper for hackathon demo
-  const handleQuickFill = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setErrorMessage('');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -66,39 +59,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateToReg
           </div>
           <h2 className="auth-title">Welcome to RouteLK</h2>
           <p className="auth-subtitle">Log in to book seats, manage buses, or view admin analytics</p>
-        </div>
-
-        {/* Demo Accounts Quick-Select for Hackathon */}
-        <div className="demo-accounts-card">
-          <div className="demo-card-title">
-            <span>⚡ Demo Quick-Fill Accounts:</span>
-          </div>
-          <div className="demo-chips-grid">
-            <button
-              type="button"
-              className={`demo-chip ${email === 'admin@routelk.lk' ? 'active' : ''}`}
-              onClick={() => handleQuickFill('admin@routelk.lk', 'admin123')}
-            >
-              <span>👑 Admin</span>
-              <span className="demo-chip-role">System Admin</span>
-            </button>
-            <button
-              type="button"
-              className={`demo-chip ${email === 'kasun@routelk.lk' ? 'active' : ''}`}
-              onClick={() => handleQuickFill('kasun@routelk.lk', 'pass123')}
-            >
-              <span>👤 Passenger</span>
-              <span className="demo-chip-role">Kasun Perera</span>
-            </button>
-            <button
-              type="button"
-              className={`demo-chip ${email === 'owner1@routelk.lk' ? 'active' : ''}`}
-              onClick={() => handleQuickFill('owner1@routelk.lk', 'owner123')}
-            >
-              <span>🚌 Bus Owner</span>
-              <span className="demo-chip-role">Sunil Travels</span>
-            </button>
-          </div>
         </div>
 
         {/* Error Alert */}

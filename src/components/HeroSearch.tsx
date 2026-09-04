@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SeatBookingModal } from './SeatBookingModal';
 
 interface BusResult {
   id: string;
@@ -14,7 +15,15 @@ interface BusResult {
   availableSeats: number;
 }
 
-export const HeroSearch: React.FC = () => {
+interface HeroSearchProps {
+  onNavigateToDashboard?: () => void;
+  onNavigateToLogin?: () => void;
+}
+
+export const HeroSearch: React.FC<HeroSearchProps> = ({
+  onNavigateToDashboard,
+  onNavigateToLogin,
+}) => {
   const [fromLocation, setFromLocation] = useState('Colombo');
   const [toLocation, setToLocation] = useState('Kandy');
   const [busType, setBusType] = useState('ALL');
@@ -24,6 +33,12 @@ export const HeroSearch: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [showModal, setShowModal] = useState(false);
+
+  // Seat Booking State
+  const [selectedBusForSeats, setSelectedBusForSeats] = useState<BusResult | null>(null);
+  const [showSeatModal, setShowSeatModal] = useState(false);
+
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,46 +53,19 @@ export const HeroSearch: React.FC = () => {
         busType,
       });
 
-      const res = await fetch(`http://localhost:5000/api/buses/search?${queryParams.toString()}`);
+      const res = await fetch(`${API_BASE}/buses/search?${queryParams.toString()}`);
       const data = await res.json();
 
-      if (data.success) {
-        setBuses(data.data || []);
+      if (data.success && data.data && data.data.length > 0) {
+        setBuses(data.data);
       } else {
         setBuses([]);
-        setSearchError(data.message || 'No buses found for this search.');
+        setSearchError(data.message || `No active buses found from ${fromLocation} to ${toLocation} on ${travelDate}.`);
       }
       setShowModal(true);
     } catch (err: any) {
-      // Fallback demo results if backend not started yet
-      setBuses([
-        {
-          id: '1',
-          busNumber: 'NB-1234',
-          operatorName: 'Sunil Travels',
-          busType: 'AC',
-          from: fromLocation,
-          to: toLocation,
-          departureTime: '08:00 AM',
-          arrivalTime: '11:00 AM',
-          fare: 500,
-          totalSeats: 40,
-          availableSeats: 36,
-        },
-        {
-          id: '2',
-          busNumber: 'NC-5678',
-          operatorName: 'Lanka Express',
-          busType: 'NON_AC',
-          from: fromLocation,
-          to: toLocation,
-          departureTime: '09:30 AM',
-          arrivalTime: '01:00 PM',
-          fare: 350,
-          totalSeats: 50,
-          availableSeats: 48,
-        },
-      ]);
+      setBuses([]);
+      setSearchError('Could not reach RouteLK database server. Please ensure backend is running.');
       setShowModal(true);
     } finally {
       setIsSearching(false);
@@ -122,11 +110,15 @@ export const HeroSearch: React.FC = () => {
                     >
                       <option value="Colombo">Colombo (Fort / Bastian)</option>
                       <option value="Kandy">Kandy (Goods Shed)</option>
-                      <option value="Galle">Galle</option>
+                      <option value="Galle">Galle Central</option>
                       <option value="Matara">Matara</option>
-                      <option value="Jaffna">Jaffna</option>
+                      <option value="Jaffna">Jaffna Central</option>
                       <option value="Kurunegala">Kurunegala</option>
                       <option value="Negombo">Negombo</option>
+                      <option value="Anuradhapura">Anuradhapura</option>
+                      <option value="Badulla">Badulla</option>
+                      <option value="Nuwara Eliya">Nuwara Eliya</option>
+                      <option value="Trincomalee">Trincomalee</option>
                     </select>
                   </div>
                 </div>
@@ -144,13 +136,17 @@ export const HeroSearch: React.FC = () => {
                       value={toLocation}
                       onChange={(e) => setToLocation(e.target.value)}
                     >
-                      <option value="Kandy">Kandy</option>
-                      <option value="Colombo">Colombo</option>
-                      <option value="Galle">Galle</option>
+                      <option value="Kandy">Kandy (Goods Shed)</option>
+                      <option value="Colombo">Colombo (Fort / Bastian)</option>
+                      <option value="Galle">Galle Central</option>
                       <option value="Matara">Matara</option>
-                      <option value="Jaffna">Jaffna</option>
+                      <option value="Jaffna">Jaffna Central</option>
                       <option value="Kurunegala">Kurunegala</option>
                       <option value="Negombo">Negombo</option>
+                      <option value="Anuradhapura">Anuradhapura</option>
+                      <option value="Badulla">Badulla</option>
+                      <option value="Nuwara Eliya">Nuwara Eliya</option>
+                      <option value="Trincomalee">Trincomalee</option>
                     </select>
                   </div>
                 </div>
@@ -387,9 +383,11 @@ export const HeroSearch: React.FC = () => {
                         <span>{bus.availableSeats} seats left</span>
                       </div>
                       <button
+                        type="button"
                         className="book-now-btn"
                         onClick={() => {
-                          alert(`Booking flow: Selected bus ${bus.busNumber} (${bus.operatorName}) for Rs. ${bus.fare}. Please log in to complete reservation.`);
+                          setSelectedBusForSeats(bus);
+                          setShowSeatModal(true);
                         }}
                       >
                         Select Seats
@@ -401,6 +399,18 @@ export const HeroSearch: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Interactive Seat Booking Modal */}
+      {showSeatModal && (
+        <SeatBookingModal
+          isOpen={showSeatModal}
+          onClose={() => setShowSeatModal(false)}
+          bus={selectedBusForSeats}
+          travelDate={travelDate}
+          onNavigateToDashboard={onNavigateToDashboard}
+          onNavigateToLogin={onNavigateToLogin}
+        />
       )}
     </>
   );

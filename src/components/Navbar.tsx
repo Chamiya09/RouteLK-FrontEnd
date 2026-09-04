@@ -56,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => 
   const handleLogout = () => {
     setDropdownOpen(false);
     logout();
-    setActiveView('home');
+    setActiveView('login');
   };
 
   return (
@@ -66,7 +66,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => 
         <div
           className="navbar-brand"
           style={{ cursor: 'pointer' }}
-          onClick={() => setActiveView('home')}
+          onClick={() => {
+            if (isAuthenticated && user?.role === 'admin') {
+              setActiveView('admin');
+            } else {
+              setActiveView('home');
+            }
+          }}
         >
           <div className="brand-icon-box">
             <svg
@@ -96,12 +102,14 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => 
 
         {/* Navigation & Auth */}
         <nav className="navbar-nav">
-          <button
-            className={`nav-link-btn ${activeView === 'home' ? 'active' : ''}`}
-            onClick={() => setActiveView('home')}
-          >
-            Home
-          </button>
+          {(!isAuthenticated || user?.role !== 'admin') && (
+            <button
+              className={`nav-link-btn ${activeView === 'home' ? 'active' : ''}`}
+              onClick={() => setActiveView('home')}
+            >
+              Home
+            </button>
+          )}
 
           {isAuthenticated && user?.role !== 'admin' && (
             <button
@@ -117,7 +125,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => 
               className={`nav-link-btn ${activeView === 'admin' ? 'active' : ''}`}
               onClick={() => setActiveView('admin')}
             >
-              Admin Panel
+              Dashboard
             </button>
           )}
 
@@ -177,20 +185,22 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => 
                       </span>
                     </button>
 
-                    <button
-                      type="button"
-                      className="dropdown-item-btn"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        setActiveView('home');
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="8" />
-                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                      </svg>
-                      <span>Search Buses & Routes</span>
-                    </button>
+                    {user.role !== 'admin' && (
+                      <button
+                        type="button"
+                        className="dropdown-item-btn"
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          setActiveView('home');
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="11" cy="11" r="8" />
+                          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <span>Search Buses & Routes</span>
+                      </button>
+                    )}
 
                     <div className="dropdown-item-divider" />
 
