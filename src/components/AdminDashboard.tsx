@@ -4,19 +4,15 @@ import {
   getAdminStatsApi,
   getUsersApi,
   deleteUserApi,
-  getBusesApi,
-  deleteBusApi,
-  createBusApi,
   type AdminStats,
   type User,
-  type Bus,
 } from '../services/api';
 
 interface AdminDashboardProps {
   onBackToHome: () => void;
 }
 
-type AdminTab = 'overview' | 'buses' | 'users';
+type AdminTab = 'overview' | 'users';
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) => {
   const { user, token } = useAuth();
@@ -27,42 +23,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) 
   // Data States
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
-  const [buses, setBuses] = useState<Bus[]>([]);
 
   // UI States
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Add Bus Modal State
-  const [showAddBusModal, setShowAddBusModal] = useState(false);
-  const [newBusNumber, setNewBusNumber] = useState('');
-  const [newOperatorName, setNewOperatorName] = useState('');
-  const [newBusType, setNewBusType] = useState<'AC' | 'NON_AC'>('AC');
-  const [newFrom, setNewFrom] = useState('Colombo');
-  const [newTo, setNewTo] = useState('Kandy');
-  const [newDeparture, setNewDeparture] = useState('08:00');
-  const [newArrival, setNewArrival] = useState('11:00');
-  const [newFare, setNewFare] = useState('500');
-  const [newSeats, setNewSeats] = useState('40');
-  const [isSubmittingBus, setIsSubmittingBus] = useState(false);
-
-  // Fetch all admin data
+  // Fetch admin overview and users
   const loadData = async () => {
     if (!token) return;
     try {
       setLoading(true);
       setError('');
 
-      const [statsRes, usersRes, busesRes] = await Promise.all([
+      const [statsRes, usersRes] = await Promise.all([
         getAdminStatsApi(token),
         getUsersApi(token),
-        getBusesApi(),
       ]);
 
       if (statsRes.success) setStats(statsRes.data);
       if (usersRes.success) setUsers(usersRes.data);
-      if (busesRes.success) setBuses(busesRes.data);
     } catch (err: any) {
       setError(err.message || 'Failed to load admin dashboard data');
     } finally {
@@ -90,79 +70,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) 
       if (statsRes.success) setStats(statsRes.data);
     } catch (err: any) {
       setError(err.message || 'Failed to delete user.');
-    }
-  };
-
-  // Handle Delete Bus
-  const handleDeleteBus = async (busId: string, busNumber: string) => {
-    if (!token) return;
-    if (!window.confirm(`Are you sure you want to delete bus "${busNumber}"?`)) {
-      return;
-    }
-
-    try {
-      await deleteBusApi(busId, token);
-      setSuccessMsg(`Bus "${busNumber}" deleted successfully.`);
-      setBuses((prev) => prev.filter((b) => (b.id || b._id) !== busId));
-      // Refresh stats
-      const statsRes = await getAdminStatsApi(token);
-      if (statsRes.success) setStats(statsRes.data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete bus.');
-    }
-  };
-
-  // Handle Add Bus Submit
-  const handleAddBusSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token) return;
-
-    if (!newBusNumber.trim() || !newOperatorName.trim()) {
-      setError('Please fill in all bus information.');
-      return;
-    }
-
-    if (newFrom.trim().toLowerCase() === newTo.trim().toLowerCase()) {
-      setError('Departure and destination locations cannot be identical.');
-      return;
-    }
-
-    setIsSubmittingBus(true);
-    setError('');
-
-    try {
-      const res = await createBusApi(
-        {
-          busNumber: newBusNumber.trim().toUpperCase(),
-          operatorName: newOperatorName.trim(),
-          busType: newBusType,
-          from: newFrom.trim(),
-          to: newTo.trim(),
-          departureTime: newDeparture,
-          arrivalTime: newArrival,
-          fare: Number(newFare),
-          totalSeats: Number(newSeats),
-          routeStops: [newFrom.trim(), newTo.trim()],
-          isActive: true,
-        },
-        token
-      );
-
-      if (res.success) {
-        setSuccessMsg(`Bus "${newBusNumber.toUpperCase()}" added successfully!`);
-        setShowAddBusModal(false);
-        // Reset form
-        setNewBusNumber('');
-        setNewOperatorName('');
-        // Reload buses and stats
-        const [busesRes, statsRes] = await Promise.all([getBusesApi(), getAdminStatsApi(token)]);
-        if (busesRes.success) setBuses(busesRes.data);
-        if (statsRes.success) setStats(statsRes.data);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to create bus.');
-    } finally {
-      setIsSubmittingBus(false);
     }
   };
 
@@ -207,24 +114,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) 
               <span>Dashboard</span>
             </div>
             <span className="admin-sidebar-badge">Live</span>
-          </button>
-
-          <button
-            type="button"
-            className={`admin-sidebar-btn ${activeTab === 'buses' ? 'active' : ''}`}
-            onClick={() => setActiveTab('buses')}
-          >
-            <div className="admin-nav-label-group">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M8 6v6" />
-                <path d="M15 6v6" />
-                <path d="M2 12h19.6" />
-                <circle cx="7" cy="18" r="2" />
-                <circle cx="16" cy="18" r="2" />
-              </svg>
-              <span>Bus Management</span>
-            </div>
-            <span className="admin-sidebar-badge">{buses.length}</span>
           </button>
 
           <button
@@ -381,23 +270,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) 
 
                 <div className="admin-action-card">
                   <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#0d1926', marginBottom: '8px' }}>
-                    Admin Quick Actions
+                    User Administration
                   </h3>
                   <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '16px' }}>
-                    Use the sidebar on the left to add, inspect, or delete buses from the transit network, and manage all passenger & owner accounts.
+                    Use the <strong>User Management</strong> section on the left sidebar to inspect all registered passenger and owner accounts, verify account roles, and manage user access.
                   </p>
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div>
                     <button
                       type="button"
                       className="admin-btn-primary"
-                      onClick={() => setActiveTab('buses')}
-                    >
-                      Manage Buses ({buses.length})
-                    </button>
-                    <button
-                      type="button"
-                      className="nav-link-btn"
-                      style={{ border: '1px solid #e2e8f0', borderRadius: '10px' }}
                       onClick={() => setActiveTab('users')}
                     >
                       Manage Users ({users.length})
@@ -410,98 +291,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) 
         )}
 
         {/* ---------------------------------------------------- */}
-        {/* TAB 2: BUS MANAGEMENT                               */}
-        {/* ---------------------------------------------------- */}
-        {activeTab === 'buses' && (
-          <div>
-            <div className="admin-panel-header">
-              <div className="admin-panel-title">
-                <h2>Bus Management</h2>
-                <p>View, add, and remove buses across Sri Lanka routes</p>
-              </div>
-              <button
-                type="button"
-                className="admin-btn-primary"
-                onClick={() => setShowAddBusModal(true)}
-              >
-                + Add New Bus
-              </button>
-            </div>
-
-            <div className="admin-table-container">
-              <div className="admin-table-responsive">
-                <table className="admin-data-table">
-                  <thead>
-                    <tr>
-                      <th>Bus Number</th>
-                      <th>Operator</th>
-                      <th>Type</th>
-                      <th>Route</th>
-                      <th>Schedule</th>
-                      <th>Fare</th>
-                      <th>Seats</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {buses.length === 0 ? (
-                      <tr>
-                        <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
-                          No buses registered in the system.
-                        </td>
-                      </tr>
-                    ) : (
-                      buses.map((bus) => {
-                        const busId = bus.id || bus._id || '';
-                        return (
-                          <tr key={busId}>
-                            <td>
-                              <strong style={{ color: '#0d1926' }}>{bus.busNumber}</strong>
-                            </td>
-                            <td>{bus.operatorName}</td>
-                            <td>
-                              <span
-                                className="bus-type-tag"
-                                style={{
-                                  backgroundColor: bus.busType === 'AC' ? '#e8f8f0' : '#f1f5f9',
-                                  color: bus.busType === 'AC' ? '#059669' : '#475569',
-                                }}
-                              >
-                                {bus.busType}
-                              </span>
-                            </td>
-                            <td>
-                              {bus.from} <span style={{ color: '#059669' }}>→</span> {bus.to}
-                            </td>
-                            <td>
-                              {bus.departureTime} - {bus.arrivalTime}
-                            </td>
-                            <td>
-                              <strong>Rs. {bus.fare}</strong>
-                            </td>
-                            <td>{bus.totalSeats}</td>
-                            <td>
-                              <button
-                                type="button"
-                                className="admin-btn-sm-danger"
-                                onClick={() => handleDeleteBus(busId, bus.busNumber)}
-                              >
-                                🗑️ Delete
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ---------------------------------------------------- */}
-        {/* TAB 3: USER MANAGEMENT                              */}
+        {/* TAB 2: USER MANAGEMENT                              */}
         {/* ---------------------------------------------------- */}
         {activeTab === 'users' && (
           <div>
@@ -593,190 +383,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToHome }) 
           </div>
         )}
       </main>
-
-      {/* ---------------------------------------------------- */}
-      {/* ADD BUS MODAL                                        */}
-      {/* ---------------------------------------------------- */}
-      {showAddBusModal && (
-        <div className="modal-overlay" onClick={() => setShowAddBusModal(false)}>
-          <div
-            className="modal-content-card"
-            style={{ maxWidth: '540px' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-header">
-              <div>
-                <h3 className="modal-route-title">Add New Bus</h3>
-                <p className="modal-route-sub">Register an intercity express bus to RouteLK</p>
-              </div>
-              <button
-                type="button"
-                className="modal-close-btn"
-                onClick={() => setShowAddBusModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="modal-body">
-              <form onSubmit={handleAddBusSubmit} className="auth-form">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Bus Number</label>
-                    <input
-                      type="text"
-                      className="auth-input"
-                      style={{ paddingLeft: '14px' }}
-                      placeholder="e.g. NB-9999"
-                      value={newBusNumber}
-                      onChange={(e) => setNewBusNumber(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Operator Name</label>
-                    <input
-                      type="text"
-                      className="auth-input"
-                      style={{ paddingLeft: '14px' }}
-                      placeholder="e.g. Express Travels"
-                      value={newOperatorName}
-                      onChange={(e) => setNewOperatorName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                  <div className="form-group">
-                    <label className="form-label">From</label>
-                    <select
-                      className="auth-input"
-                      style={{ paddingLeft: '14px' }}
-                      value={newFrom}
-                      onChange={(e) => setNewFrom(e.target.value)}
-                    >
-                      <option value="Colombo">Colombo</option>
-                      <option value="Kandy">Kandy</option>
-                      <option value="Galle">Galle</option>
-                      <option value="Matara">Matara</option>
-                      <option value="Jaffna">Jaffna</option>
-                      <option value="Kurunegala">Kurunegala</option>
-                      <option value="Negombo">Negombo</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">To</label>
-                    <select
-                      className="auth-input"
-                      style={{ paddingLeft: '14px' }}
-                      value={newTo}
-                      onChange={(e) => setNewTo(e.target.value)}
-                    >
-                      <option value="Kandy">Kandy</option>
-                      <option value="Colombo">Colombo</option>
-                      <option value="Galle">Galle</option>
-                      <option value="Matara">Matara</option>
-                      <option value="Jaffna">Jaffna</option>
-                      <option value="Kurunegala">Kurunegala</option>
-                      <option value="Negombo">Negombo</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Departure Time</label>
-                    <input
-                      type="time"
-                      className="auth-input"
-                      style={{ paddingLeft: '14px' }}
-                      value={newDeparture}
-                      onChange={(e) => setNewDeparture(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Arrival Time</label>
-                    <input
-                      type="time"
-                      className="auth-input"
-                      style={{ paddingLeft: '14px' }}
-                      value={newArrival}
-                      onChange={(e) => setNewArrival(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Type</label>
-                    <select
-                      className="auth-input"
-                      style={{ paddingLeft: '14px' }}
-                      value={newBusType}
-                      onChange={(e) => setNewBusType(e.target.value as 'AC' | 'NON_AC')}
-                    >
-                      <option value="AC">AC</option>
-                      <option value="NON_AC">Non-AC</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Fare (LKR)</label>
-                    <input
-                      type="number"
-                      className="auth-input"
-                      style={{ paddingLeft: '14px' }}
-                      value={newFare}
-                      onChange={(e) => setNewFare(e.target.value)}
-                      min="50"
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Seats</label>
-                    <input
-                      type="number"
-                      className="auth-input"
-                      style={{ paddingLeft: '14px' }}
-                      value={newSeats}
-                      onChange={(e) => setNewSeats(e.target.value)}
-                      min="10"
-                      max="60"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  <button
-                    type="button"
-                    className="nav-link-btn"
-                    style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: '10px' }}
-                    onClick={() => setShowAddBusModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="auth-submit-btn"
-                    style={{ flex: 2, marginTop: 0 }}
-                    disabled={isSubmittingBus}
-                  >
-                    {isSubmittingBus ? 'Creating...' : 'Save Bus to Fleet'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
