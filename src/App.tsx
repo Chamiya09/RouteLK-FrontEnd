@@ -4,11 +4,12 @@ import { Navbar } from './components/Navbar';
 import { LoginPage } from './components/LoginPage';
 import { RegisterPage } from './components/RegisterPage';
 import { AdminDashboard } from './components/AdminDashboard';
+import { UserDashboard } from './components/UserDashboard';
 import { HeroSearch } from './components/HeroSearch';
 import { Footer } from './components/Footer';
 import './App.css';
 
-type ViewMode = 'home' | 'login' | 'register' | 'admin';
+type ViewMode = 'home' | 'login' | 'register' | 'admin' | 'user-dashboard';
 
 function AppContent() {
   const [activeView, setActiveView] = useState<ViewMode>('home');
@@ -26,7 +27,7 @@ function AppContent() {
               if (role === 'admin') {
                 setActiveView('admin');
               } else {
-                setActiveView('home');
+                setActiveView('user-dashboard');
               }
             }}
             onNavigateToRegister={() => setActiveView('register')}
@@ -35,13 +36,17 @@ function AppContent() {
 
         {activeView === 'register' && (
           <RegisterPage
-            onSuccess={() => setActiveView('home')}
+            onSuccess={() => setActiveView('user-dashboard')}
             onNavigateToLogin={() => setActiveView('login')}
           />
         )}
 
         {activeView === 'admin' && (
           <AdminDashboard onBackToHome={() => setActiveView('home')} />
+        )}
+
+        {activeView === 'user-dashboard' && (
+          <UserDashboard onBackToSearch={() => setActiveView('home')} />
         )}
       </main>
 
