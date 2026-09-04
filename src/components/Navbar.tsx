@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 interface NavbarProps {
-  activeView: 'home' | 'login' | 'register' | 'admin';
-  setActiveView: (view: 'home' | 'login' | 'register' | 'admin') => void;
+  activeView: 'home' | 'login' | 'register' | 'admin' | 'user-dashboard';
+  setActiveView: (view: 'home' | 'login' | 'register' | 'admin' | 'user-dashboard') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => {
@@ -49,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => 
     if (user?.role === 'admin') {
       setActiveView('admin');
     } else {
-      setActiveView('home');
+      setActiveView('user-dashboard');
     }
   };
 
@@ -102,6 +102,24 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => 
           >
             Home
           </button>
+
+          {isAuthenticated && user?.role !== 'admin' && (
+            <button
+              className={`nav-link-btn ${activeView === 'user-dashboard' ? 'active' : ''}`}
+              onClick={() => setActiveView('user-dashboard')}
+            >
+              My Trips
+            </button>
+          )}
+
+          {isAuthenticated && user?.role === 'admin' && (
+            <button
+              className={`nav-link-btn ${activeView === 'admin' ? 'active' : ''}`}
+              onClick={() => setActiveView('admin')}
+            >
+              Admin Panel
+            </button>
+          )}
 
           {isAuthenticated && user ? (
             /* User Avatar Button with Dropdown Menu */

@@ -41,6 +41,21 @@ export interface Bus {
   isActive?: boolean;
 }
 
+export interface Booking {
+  _id?: string;
+  id?: string;
+  bookingId: string;
+  userId?: string;
+  busId?: Bus;
+  travelDate: string;
+  seats: number[];
+  passengerCount: number;
+  farePerSeat: number;
+  totalFare: number;
+  status: 'CONFIRMED' | 'CANCELLED';
+  createdAt?: string;
+}
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export async function loginApi(email: string, password: string): Promise<AuthResponse> {
@@ -162,6 +177,36 @@ export async function createBusApi(busData: Partial<Bus>, token: string): Promis
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.message || 'Failed to create bus.');
+  }
+  return data;
+}
+
+export async function getMyBookingsApi(token: string): Promise<{ success: boolean; data: Booking[] }> {
+  const res = await fetch(`${API_BASE}/bookings/my`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to fetch your bookings.');
+  }
+  return data;
+}
+
+export async function cancelBookingApi(
+  id: string,
+  token: string
+): Promise<{ success: boolean; message: string; data: Booking }> {
+  const res = await fetch(`${API_BASE}/bookings/${id}/cancel`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to cancel booking.');
   }
   return data;
 }
