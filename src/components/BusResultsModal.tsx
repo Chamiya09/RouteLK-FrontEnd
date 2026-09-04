@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BusIcon, ClockIcon, MapPinIcon, UsersIcon } from './Icons';
+import { BusIcon, ClockIcon, UsersIcon } from './Icons';
 
 export interface BusRoute {
   id: string;
