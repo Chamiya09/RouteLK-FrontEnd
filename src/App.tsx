@@ -19,7 +19,12 @@ function AppContent() {
       <Navbar activeView={activeView} setActiveView={setActiveView} />
 
       <main style={{ flex: 1 }}>
-        {activeView === 'home' && <HeroSearch />}
+        {activeView === 'home' && (
+          <HeroSearch
+            onNavigateToDashboard={() => setActiveView('user-dashboard')}
+            onNavigateToLogin={() => setActiveView('login')}
+          />
+        )}
 
         {activeView === 'login' && (
           <LoginPage

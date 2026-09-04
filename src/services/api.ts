@@ -236,3 +236,75 @@ export async function cancelBookingApi(
   }
   return data;
 }
+
+export interface BusSeatAvailability {
+  busId: string;
+  busNumber: string;
+  busType: 'AC' | 'NON_AC';
+  travelDate: string;
+  fare: number;
+  totalSeats: number;
+  bookedSeats: number[];
+  availableSeats: number[];
+}
+
+export async function getBusSeatsApi(
+  busId: string,
+  travelDate: string
+): Promise<{ success: boolean; data: BusSeatAvailability }> {
+  const res = await fetch(`${API_BASE}/buses/${busId}/seats?travelDate=${travelDate}`);
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to fetch seat availability.');
+  }
+  return data;
+}
+
+export interface CreateBookingPayload {
+  busId: string;
+  travelDate: string;
+  seats: number[];
+}
+
+export interface CreateBookingResponse {
+  success: boolean;
+  message: string;
+  booking: {
+    id: string;
+    bookingId: string;
+    bus: string;
+    busNumber?: string;
+    operatorName?: string;
+    busType?: string;
+    departureTime?: string;
+    arrivalTime?: string;
+    from: string;
+    to: string;
+    travelDate: string;
+    seats: number[];
+    passengerCount: number;
+    farePerSeat: number;
+    totalFare: number;
+    status: string;
+    createdAt: string;
+  };
+}
+
+export async function createBookingApi(
+  payload: CreateBookingPayload,
+  token: string
+): Promise<CreateBookingResponse> {
+  const res = await fetch(`${API_BASE}/bookings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Booking failed.');
+  }
+  return data;
+}

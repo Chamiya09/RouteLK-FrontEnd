@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SeatBookingModal } from './SeatBookingModal';
 
 interface BusResult {
   id: string;
@@ -14,7 +15,15 @@ interface BusResult {
   availableSeats: number;
 }
 
-export const HeroSearch: React.FC = () => {
+interface HeroSearchProps {
+  onNavigateToDashboard?: () => void;
+  onNavigateToLogin?: () => void;
+}
+
+export const HeroSearch: React.FC<HeroSearchProps> = ({
+  onNavigateToDashboard,
+  onNavigateToLogin,
+}) => {
   const [fromLocation, setFromLocation] = useState('Colombo');
   const [toLocation, setToLocation] = useState('Kandy');
   const [busType, setBusType] = useState('ALL');
@@ -24,6 +33,10 @@ export const HeroSearch: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [showModal, setShowModal] = useState(false);
+
+  // Seat Booking State
+  const [selectedBusForSeats, setSelectedBusForSeats] = useState<BusResult | null>(null);
+  const [showSeatModal, setShowSeatModal] = useState(false);
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -370,9 +383,11 @@ export const HeroSearch: React.FC = () => {
                         <span>{bus.availableSeats} seats left</span>
                       </div>
                       <button
+                        type="button"
                         className="book-now-btn"
                         onClick={() => {
-                          alert(`Booking flow: Selected bus ${bus.busNumber} (${bus.operatorName}) for Rs. ${bus.fare}. Please log in to complete reservation.`);
+                          setSelectedBusForSeats(bus);
+                          setShowSeatModal(true);
                         }}
                       >
                         Select Seats
@@ -384,6 +399,18 @@ export const HeroSearch: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Interactive Seat Booking Modal */}
+      {showSeatModal && (
+        <SeatBookingModal
+          isOpen={showSeatModal}
+          onClose={() => setShowSeatModal(false)}
+          bus={selectedBusForSeats}
+          travelDate={travelDate}
+          onNavigateToDashboard={onNavigateToDashboard}
+          onNavigateToLogin={onNavigateToLogin}
+        />
       )}
     </>
   );
