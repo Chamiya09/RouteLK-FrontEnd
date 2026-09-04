@@ -1,9 +1,11 @@
 export interface User {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
   email: string;
   phone?: string;
   role: 'passenger' | 'owner' | 'admin';
+  createdAt?: string;
 }
 
 export interface AuthResponse {
@@ -21,6 +23,22 @@ export interface AdminStats {
   totalBookings: number;
   confirmedBookings: number;
   cancelledBookings: number;
+}
+
+export interface Bus {
+  id?: string;
+  _id?: string;
+  busNumber: string;
+  busType: 'AC' | 'NON_AC';
+  operatorName: string;
+  from: string;
+  to: string;
+  routeStops?: string[];
+  departureTime: string;
+  arrivalTime: string;
+  fare: number;
+  totalSeats: number;
+  isActive?: boolean;
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -82,3 +100,68 @@ export async function getAdminStatsApi(token: string): Promise<{ success: boolea
   return data;
 }
 
+export async function getUsersApi(token: string): Promise<{ success: boolean; data: User[] }> {
+  const res = await fetch(`${API_BASE}/users`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to fetch users.');
+  }
+  return data;
+}
+
+export async function deleteUserApi(id: string, token: string): Promise<{ success: boolean; message: string }> {
+  const res = await fetch(`${API_BASE}/users/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to delete user.');
+  }
+  return data;
+}
+
+export async function getBusesApi(): Promise<{ success: boolean; data: Bus[] }> {
+  const res = await fetch(`${API_BASE}/buses`);
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to fetch buses.');
+  }
+  return data;
+}
+
+export async function deleteBusApi(id: string, token: string): Promise<{ success: boolean; message: string }> {
+  const res = await fetch(`${API_BASE}/buses/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to delete bus.');
+  }
+  return data;
+}
+
+export async function createBusApi(busData: Partial<Bus>, token: string): Promise<{ success: boolean; data: Bus }> {
+  const res = await fetch(`${API_BASE}/buses`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(busData),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to create bus.');
+  }
+  return data;
+}
