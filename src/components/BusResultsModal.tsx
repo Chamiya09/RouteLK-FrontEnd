@@ -22,66 +22,8 @@ interface BusResultsModalProps {
   fromCity: string;
   toCity: string;
   passengers: number;
+  buses?: BusRoute[];
 }
-
-const MOCK_BUSES: BusRoute[] = [
-  {
-    id: 'bus-1',
-    operator: 'Southern Express Line',
-    busType: 'Super Luxury A/C (Highway)',
-    from: 'Colombo Fort',
-    to: 'Galle Central',
-    departureTime: '06:30 AM',
-    arrivalTime: '08:00 AM',
-    duration: '1h 30m',
-    fareLKR: 950,
-    availableSeats: 14,
-    totalSeats: 40,
-    features: ['Air Conditioned', 'Live Tracking', 'Charging Ports', 'Reclining Seats']
-  },
-  {
-    id: 'bus-2',
-    operator: 'Hill Country Royal Trans',
-    busType: 'Semi-Luxury Express',
-    from: 'Colombo Pettah',
-    to: 'Kandy Goods Shed',
-    departureTime: '07:15 AM',
-    arrivalTime: '10:30 AM',
-    duration: '3h 15m',
-    fareLKR: 850,
-    availableSeats: 8,
-    totalSeats: 48,
-    features: ['Overhead Luggage', 'Curtains', 'Direct Route']
-  },
-  {
-    id: 'bus-3',
-    operator: 'Northern Super Line',
-    busType: 'Luxury Sleeper / AC',
-    from: 'Colombo Bastian Mawatha',
-    to: 'Jaffna Station',
-    departureTime: '09:00 PM',
-    arrivalTime: '05:00 AM',
-    duration: '8h 00m',
-    fareLKR: 2800,
-    availableSeats: 22,
-    totalSeats: 36,
-    features: ['Sleeper Berths', 'USB Chargers', 'Water Bottle', 'WiFi']
-  },
-  {
-    id: 'bus-4',
-    operator: 'Rajarata Highway King',
-    busType: 'Air Conditioned Express',
-    from: 'Colombo',
-    to: 'Anuradhapura',
-    departureTime: '08:00 AM',
-    arrivalTime: '12:30 PM',
-    duration: '4h 30m',
-    fareLKR: 1400,
-    availableSeats: 19,
-    totalSeats: 45,
-    features: ['A/C', 'Spacious Seating', 'Live Status']
-  }
-];
 
 export const BusResultsModal: React.FC<BusResultsModalProps> = ({
   isOpen,
@@ -89,6 +31,7 @@ export const BusResultsModal: React.FC<BusResultsModalProps> = ({
   fromCity,
   toCity,
   passengers,
+  buses = [],
 }) => {
   const [selectedBus, setSelectedBus] = useState<BusRoute | null>(null);
   const [bookedSuccess, setBookedSuccess] = useState(false);
@@ -141,7 +84,12 @@ export const BusResultsModal: React.FC<BusResultsModalProps> = ({
             </div>
           ) : (
             <div className="bus-list">
-              {MOCK_BUSES.map((bus) => (
+              {buses.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
+                  No active buses found matching your search.
+                </div>
+              ) : (
+                buses.map((bus) => (
                 <div key={bus.id} className="bus-result-card">
                   <div className="bus-card-left">
                     <div className="bus-operator-badge">
@@ -195,7 +143,7 @@ export const BusResultsModal: React.FC<BusResultsModalProps> = ({
                     </button>
                   </div>
                 </div>
-              ))}
+              )))}
             </div>
           )}
         </div>
