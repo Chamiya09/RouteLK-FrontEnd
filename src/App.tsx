@@ -1,63 +1,59 @@
 import { useState } from 'react';
-import './App.css';
+import { AuthProvider } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
-import { ProblemSection } from './components/ProblemSection';
-import { HowItWorks } from './components/HowItWorks';
+import { LoginPage } from './components/LoginPage';
+import { RegisterPage } from './components/RegisterPage';
+import { AdminDashboard } from './components/AdminDashboard';
+import { HeroSearch } from './components/HeroSearch';
 import { Footer } from './components/Footer';
-import { BusResultsModal } from './components/BusResultsModal';
+import './App.css';
 
-export function App() {
-  const [activePage, setActivePage] = useState('home');
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [searchParams, setSearchParams] = useState({
-    from: 'Colombo',
-    to: 'Kandy',
-    passengers: 1
-  });
+type ViewMode = 'home' | 'login' | 'register' | 'admin';
 
-  const handleSearch = (from: string, to: string, passengers: number) => {
-    setSearchParams({ from, to, passengers });
-    setIsSearchModalOpen(true);
-  };
-
-  const handleNavigate = (page: string) => {
-    setActivePage(page);
-    if (page === 'home') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+function AppContent() {
+  const [activeView, setActiveView] = useState<ViewMode>('home');
 
   return (
     <div className="app-wrapper">
-      {/* Navigation Bar */}
-      <Navbar onNavigate={handleNavigate} activePage={activePage} />
+      <Navbar activeView={activeView} setActiveView={setActiveView} />
 
-      {/* Main Content Area */}
-      <main>
-        {/* Hero Section with Search Card */}
-        <Hero onSearch={handleSearch} />
+      <main style={{ flex: 1 }}>
+        {activeView === 'home' && <HeroSearch />}
 
-        {/* The Problem Section */}
-        <ProblemSection />
+        {activeView === 'login' && (
+          <LoginPage
+            onSuccess={(role) => {
+              if (role === 'admin') {
+                setActiveView('admin');
+              } else {
+                setActiveView('home');
+              }
+            }}
+            onNavigateToRegister={() => setActiveView('register')}
+          />
+        )}
 
-        {/* How It Works (3 Steps) Section */}
-        <HowItWorks />
+        {activeView === 'register' && (
+          <RegisterPage
+            onSuccess={() => setActiveView('home')}
+            onNavigateToLogin={() => setActiveView('login')}
+          />
+        )}
+
+        {activeView === 'admin' && (
+          <AdminDashboard onBackToHome={() => setActiveView('home')} />
+        )}
       </main>
 
-      {/* Footer */}
-      <Footer onNavigate={handleNavigate} />
-
-      {/* Interactive Search Modal */}
-      <BusResultsModal
-        isOpen={isSearchModalOpen}
-        onClose={() => setIsSearchModalOpen(false)}
-        fromCity={searchParams.from}
-        toCity={searchParams.to}
-        passengers={searchParams.passengers}
-      />
+      <Footer />
     </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
